@@ -1,0 +1,32 @@
+.ant-layout {
+  background: unset !important;
+}
+.ant-layout-footer {
+  background: unset !important;
+}
+.container {
+  padding: 25px 150px;
+
+}
+.layout {
+  height: 100vh;
+}
+
+
+.nav-link {
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  margin-right: 16px!important;
+
+}
+
+.nav {
+  display: flex!important;
+}
+
+.nav-link-active {
+  font-weight: 600;
+  color: #1890ff !important;
+  white-space: nowrap;
+}
