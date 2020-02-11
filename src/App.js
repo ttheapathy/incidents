@@ -1,57 +1,54 @@
-import React from 'react';
-import {
-    BrowserRouter as Router,
-    Switch,
-    Route,
-    NavLink
-} from "react-router-dom";
+import React, {useEffect} from 'react';
+import {BrowserRouter as Router, Switch, Route, NavLink} from 'react-router-dom';
+import { ProtectedRoute } from './ProtectedRoute';
 
-
-import { ProtectedRoute } from "./ProtectedRoute";
-
-import Login from './components/Login';
-
-import {News} from './components/News';
-import {Incidents} from './components/Incidents';
-
-import {NewsState} from "./context/news/NewsState";
-
-import "antd/dist/antd.css";
-import "./index.scss";
-
+import {Login} from './components/Login/Login';
+import {News} from './components/News/News';
+import {Incidents} from './components/Incidents/Incidents';
 import { Layout } from 'antd';
+import { inject, observer } from 'mobx-react';
+
+
+import 'antd/dist/antd.css';
+import './index.scss';
+
+
 
 const { Header, Content, Footer } = Layout;
 
-function App() {
-  return (
-      <NewsState>
-          <Layout className="layout">
-              <Router>
-                  <Switch>
-                      <Route exact path="/login" component={Login}>
-                      </Route>
-                      <Route>
-                          <Head />
-                          <Content className="container">
-                              <Switch>
-                                  <Route exact path={"/"}>
-                                      <News/>
-                                  </Route>
-                                  <ProtectedRoute exact path={"/incidents"}>
-                                      <Incidents/>
-                                  </ProtectedRoute>
-                              </Switch>
-                          </Content>
-                          <Footer style={{ textAlign: "center" }}>incidents app by ttheapathy</Footer>
-                      </Route>
-                  </Switch>
-              </Router>
-          </Layout>
-      </NewsState>
+const App = inject('userStore')(observer(({userStore}) => {
 
-  );
-}
+    useEffect(() => {
+        userStore.fetch();
+    }, []);
+
+
+    return (
+        <Layout className="layout">
+            <Router>
+                <Switch>
+                    <Route exact path="/login">
+                        <Login/>
+                    </Route>
+                    <Route>
+                        <Head />
+                        <Content className="container">
+                            <Switch>
+                                <Route exact path={'/'}>
+                                    <News/>
+                                </Route>
+                                <ProtectedRoute exact path={'/incidents'}>
+                                    <Incidents/>
+                                </ProtectedRoute>
+                            </Switch>
+                        </Content>
+                        <Footer style={{ textAlign: 'center' }}>incidents app by ttheapathy</Footer>
+                    </Route>
+                </Switch>
+            </Router>
+        </Layout>
+    );
+}));
 
 const Head = () => {
     return (

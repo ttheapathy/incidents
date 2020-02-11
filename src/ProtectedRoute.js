@@ -1,29 +1,41 @@
-import React from "react";
+import React from 'react';
 import {
     Route,
     Redirect
-} from "react-router-dom";
+} from 'react-router-dom';
 
-const fakeAuth = {
-    isAuthenticated: false,
-};
+import { inject, observer } from 'mobx-react';
 
-export const ProtectedRoute = ({ children, ...rest }) => {
+import { Spin, Row, Col } from 'antd';
+
+
+export const ProtectedRoute = inject('userStore')(observer(({userStore, children, ...rest}) => {
+    const loading = userStore.loading;
+    const currentUser = userStore.currentUser;
     return (
         <Route
             {...rest}
             render={({ location }) =>
-                fakeAuth.isAuthenticated ? (
-                    children
+                loading ? (
+                    <Row type="flex" justify="center">
+                        <Col>
+                            <Spin size="large" />
+                        </Col>
+                    </Row>
                 ) : (
-                    <Redirect
-                        to={{
-                            pathname: "/login",
-                            state: { from: location }
-                        }}
-                    />
+                    currentUser ? (
+                        children
+                    ) : (
+                        <Redirect
+                            to={{
+                                pathname: '/login',
+                                state: { from: location }
+                            }}
+                        />
+                    
+                    )
                 )
             }
         />
     );
-};
+}));
