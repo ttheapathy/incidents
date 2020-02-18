@@ -7,10 +7,11 @@ import './News.scss';
 
 const Title = ({ title }) => (
     <div className="news__title">
-        {title.title}<Divider type="vertical" />{title.date}
+        {title.title}
+        <Divider type="vertical" />
+        {(new Date(title.date)).toLocaleDateString()}
     </div>
 );
-
 
 export const News = inject('newsStore')(observer(({newsStore}) => {
     useEffect(() => {

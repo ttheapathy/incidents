@@ -1,159 +1,139 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { inject, observer } from 'mobx-react';
-import { Row, Col, Card, Spin, Button, Divider, Radio } from 'antd';
-import { useLocation, Link } from 'react-router-dom';
-import IncidentFormCreate from './IncidentFormCreate';
+import { reaction } from 'mobx';
+
+import { Row, Col, Modal, message } from 'antd';
+import { useHistory} from 'react-router-dom';
+
+import { IncidentFilter } from './IncidentFilter';
+import { IncidentSidebar } from './IncidentSidebar';
+import { IncidentList } from './IncidentList';
+import { IncidentForm } from './IncidentForm';
 
 import './Incidents.scss';
 
-
-
-
-const Title = ({ title }) => {
-    const priority_color = {
-        'minor': '#A9A9A9',
-        'low': '#DAA520',
-        'medium': '#FF00FF',
-        'high': '#f5222d'
-    };
-    return (
-        <div className="incidents__priority">
-            {title.title}
-            <Divider type="vertical" />
-            <Button 
-                type="primary" 
-                size="small" 
-                style={{ backgroundColor: priority_color[title.priority], borderColor: priority_color[title.priority]}}
-            >
-                <Link 
-                    to={(location) => queryHanlder(location, 'priority', title.priority)}
-                >
-                    {title.priority}
-                </Link>
-            </Button>
-            <Divider type="vertical" />
-            <Button 
-                type="primary" 
-                size="small">
-                <Link 
-                    to={(location) => queryHanlder(location, 'status', title.status)}
-                >
-                    {title.status}
-                </Link>
-            </Button>
-        </div>
-    );
-};
-
-const Extra = ({ extra }) => {
-    return (
-        <div className="incidents__extra">
-            <Divider type="vertical" />
-            {extra.date_created}
-        </div>
-    );
-};
-
-const queryHanlder = (location, param, value) => {
+/*
+const queryHanlder = (location, filter, value) => {
+    //const location = useLocation();
     const query = new URLSearchParams(location.search);
-    query.has(param) ? query.set(param, value) : query.append(param, value);
+    query.has(filter) ? query.set(filter, value) : query.append(filter, value);
     return { ...location, search: query.toString() };
 };
+*/
+
+
 
 export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
+
     
-    const visible = incidentStore.showCreateForm;
     
-    let query = new URLSearchParams(useLocation().search);
+    const [visible, setVisible] = useState(false);
+
+    const [form, setForm] = useState(null);
+
+    const setFilter = (history, filter, value) => {
+
+        const query = new URLSearchParams(history.location.search);
+
+        !value ? query.delete(filter) : query.set(filter, value);
+
+        return history.replace({ ...history.location, search: query.toString()});
+    };
+
+    const handleCancel = () => {
+        setVisible(false);
+    };
+
+    const handleForm = (form) => {
+        if (form) {
+            setForm(form);
+        }
+    };
+
+    const handleCreate = () => {
+        form.validateFields((err, values) => {
+            if (err) {
+                return;
+            }
+            //console.log('Received values of form: ', values);
+            incidentStore.addIncident(values).then(
+                (res) => {
+                    if (res.status === 201) {
+                        message.success('Инцидент успешно создан');
+                        form.resetFields();
+                        setVisible(false);
+                    } else {
+                        message.error('Ошибка при создании инцидента');
+                    }
+                }
+            );
+            
+            //form.resetFields();
+            //setVisible(false);
+
+        });
+    };
+
+    const history = useHistory();
+
+    const query = new URLSearchParams(history.location.search);
+
 
     const qStatus = query.get('status');
     const qPriority = query.get('priority');
 
-    incidentStore.setStatus(qStatus);
-    incidentStore.setPriority(qPriority);
+
 
     useEffect(() => {
-        incidentStore.fetchIncidents();
-    }, [qStatus, qPriority, incidentStore.limit]);
 
-    return(
+        console.log('qs', qStatus);
+        console.log('qp', qPriority);
+
+        //if (qStatus) incidentStore.setFilter('status', qStatus);
+        //if (qPriority) incidentStore.setFilter('priority', qPriority);
+
+        reaction(
+            () => incidentStore.filters.status,
+            status => setFilter(history, 'status', status)
+        );
+
+        reaction(
+            () => incidentStore.filters.priority,
+            priority => setFilter(history, 'priority', priority)
+        );
+
+        
+        incidentStore.fetchIncidents();
+
+        
+    }, [qStatus, qPriority, incidentStore.limit]);
+    
+    return (
         <div className="incidents">
             <Row gutter={[32, 16]} justify="end">
                 <Col span={12} push={9}>
-                    { incidentStore.loading ?
-                        <Row type="flex" justify="center">
-                            <Col>
-                                <Spin size="large" />
-                            </Col>
-                        </Row>
-                        :
-                        <Row gutter={[0, 16]}>
-                            <Row type="flex" justify="space-between">
-                                <Col>
-                                    <Radio.Group value={qStatus}>
-                                        <Radio.Button value="open"><Link to={(location) => queryHanlder(location, 'status', 'open')}>Open</Link></Radio.Button>
-                                        <Radio.Button value="closed"><Link to={(location) => queryHanlder(location, 'status', 'closed')}>Closed</Link></Radio.Button>
-                                    </Radio.Group>
-                                </Col>
-                                <Col>
-                                    <Radio.Group value={qPriority}>
-                                        <Radio.Button value="minor"><Link to={(location) => queryHanlder(location, 'priority', 'minor')}>Minor</Link></Radio.Button>
-                                        <Radio.Button value="low"><Link to={(location) => queryHanlder(location, 'priority', 'low')}>Low</Link></Radio.Button>
-                                        <Radio.Button value="medium"><Link to={(location) => queryHanlder(location, 'priority', 'medium')}>Medium</Link></Radio.Button>
-                                        <Radio.Button value="high"><Link to={(location) => queryHanlder(location, 'priority', 'high')}>High</Link></Radio.Button>
-                                    </Radio.Group>
-                                </Col>
-                            </Row>
-                            { !incidentStore.loading && !incidentStore.incidents.length ?
-                                <div>No content</div>
-                                :
-                                incidentStore.incidents.map(incident => (
-                                    <Col key={incident.id}>
-                                        <Card size="small" title={<Title title={{title: incident.title, priority: incident.priority, status: incident.status}} />} extra={<Extra extra={{date_created: incident.date_created}} />}>
-                                            <div className="incident__content" dangerouslySetInnerHTML={{__html: incident.description}} />
-                                        </Card>
-                                    </Col>
-                                ))
-                            }
-                            <div className="more">
-                                <Button type="primary" loading={incidentStore.loading} disabled={incidentStore.moreIncidentsActive} block onClick={()=>incidentStore.more()}>
-                                    Загрузить еще
-                                </Button>
-                            </div>
-                        </Row>
-                    }    
+                    <Row gutter={[0, 16]}>
+                        <IncidentFilter/>
+
+                        <IncidentList loading={incidentStore.loading} incidents={incidentStore.incidents} />
+                    </Row>
                 </Col>
-                
                 <Col span={6} pull={9}>
-                    <Card>
-                        <Row>
-                            <Col>
-                                <Button type="primary" loading={incidentStore.loading} block onClick={()=> incidentStore.showForm()}>Новый инцидент</Button>
-                            </Col>
-                            <Divider />
-                            {
-                                incidentStore.loading ?
-                                    <Row type="flex" justify="center">
-                                        <Col>
-                                            <Spin size="large" />
-                                        </Col>
-                                    </Row>
-                                    :
-                                    <Row>
-                                        <Col>
-                                            <div className="incidents__active-count">Активных инцидентов (10)</div>
-                                        </Col>
-                                        <Col>
-                                            <div className="incidents__count">Всего инцидентов ({incidentStore.count})</div>
-                                        </Col>
-                                    </Row>
-                            }
-                        </Row>
-                    </Card>
+                    <IncidentSidebar loading={incidentStore.loading} insidentsCount={incidentStore.count} onVisible={(visible) => setVisible(visible)}/>
                 </Col>
             </Row>
-
-            <IncidentFormCreate visible={visible}/>
+            <Modal
+                visible={visible}
+                title="Новый инцидент"
+                okText="Создать"
+                cancelText="Отмена"
+                onCancel={handleCancel}
+                confirmLoading={incidentStore.loading}
+                onOk={handleCreate}
+                
+            >
+                <IncidentForm handleForm={handleForm}/>
+            </Modal>
         </div>
     );
 }));

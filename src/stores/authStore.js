@@ -2,6 +2,7 @@ import { observable, action } from 'mobx';
 
 const authStore = observable(
     {
+        // error and errorlist
         tokens: null,
 
         setTokens(tokens) {

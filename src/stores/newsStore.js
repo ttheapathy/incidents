@@ -1,7 +1,7 @@
 import { observable, action } from 'mobx';
 
 import http from '../http';
-const news_url = 'http://127.0.0.1:8000/api/news/';
+const news_url = `${process.env.REACT_APP_API_URL}/api/news/`;
 const newsStore = observable(
     {
         news: [],

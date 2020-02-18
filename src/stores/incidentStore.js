@@ -2,7 +2,7 @@ import { observable, action, computed } from 'mobx';
 
 import http from '../http';
 
-const incidents_url = 'http://127.0.0.1:8000/api/incidents/';
+const incidents_url = `${process.env.REACT_APP_API_URL}/api/incidents/`;
 
 const incidentStore = observable(
     {
@@ -12,27 +12,40 @@ const incidentStore = observable(
         offset: 0,
         loading: true,
         showCreateForm: false,
-        filters: {status: '', priority: ''},
+        filters: {status: null, priority: null},
+        errors: {},
+
+        // bullshit. needs method for making this shit. param & value. get limit and offset as default
+        // and other filters optional.
         
         get getlimitOffset() {
             return `?limit=${this.limit}&offset=${this.offset}`;
         },
 
         get getStatus() {
-            return `&status=${this.filters.status}`;
+            return (this.filters.status) ? `&status=${this.filters.status}` : '';
         },
 
         get getPriority() {
-            return `&priority=${this.filters.priority}`;
+
+            return (this.filters.priority) ? `&priority=${this.filters.priority}` : '';
+        },
+        
+        get errorTitle(){
+            return this.errors.title;
+        },
+        get errorDescription() {
+            return this.errors.description;
         },
 
         async fetchIncidents() {
             try {
+                this.loading = true;
                 const response = await http.get(incidents_url + this.getlimitOffset + this.getStatus + this.getPriority);
                 this.incidents = response.data.results;
                 this.count = response.data.count;
             } catch(err) {
-                console.log('Incidents fetch error:', err);
+                console.error('Incidents fetch error:', err);
             }  finally {
                 this.loading = false;
             }
@@ -44,8 +57,11 @@ const incidentStore = observable(
                 const response = await http.post(incidents_url, payload);
                 this.incidents.unshift(response.data);
                 this.count +=1;
-            } catch(err) {
-                console.log('Incidents put error:', err);
+                return response;
+            } catch(error) {
+                console.error('Incidents put error:', error.response);
+                this.errors = error.response.data;
+                return error.response;
             }  finally {
                 this.loading = false;
             }
@@ -65,28 +81,26 @@ const incidentStore = observable(
         },
 
         async setStatus(status) {
-            if (status) {
-                this.filters.status = status;
-            }            
+            this.filters.status = status;
         },
 
         async setPriority(priority) {
-            if (priority) {
-                this.filters.priority = priority;
-            }            
+            this.filters.priority = priority;
         },
 
-        showForm() {
-            this.showCreateForm = true;
-        },
+        async setFilter(filter, value) {
 
-        hideForm() {
-            this.showCreateForm = false;
+            if (filter in this.filters && this.filters[filter] === value) {
+                this.filters[filter] = null;
+            } else {
+                this.filters[filter] = value;
+            }
         },
 
         get moreIncidentsActive() {
             return (this.incidents && this.incidents.length === this.count);
-        }
+        },
+        
     },
     {
         fetchIncidents: action,
@@ -95,12 +109,12 @@ const incidentStore = observable(
         limit: observable,
         offset: observable,
         moreIncidentsActive: computed,
+        errorTitle: computed,
         loading: observable,
         showCreateForm: observable,
-        filters: observable
+        filters: observable,
+        errors: observable
     }
 );
-
-
 
 export default incidentStore;

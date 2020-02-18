@@ -7,13 +7,14 @@ import authStore from '../stores/authStore';
 
 
 
-const auth_url = 'http://127.0.0.1:8000/api/auth/jwt/create/';
+const auth_url = `${process.env.REACT_APP_API_URL}/api/auth/jwt/create/`;
 
-const me = 'http://127.0.0.1:8000/api/auth/users/me/';
+const me = `${process.env.REACT_APP_API_URL}/api/auth/users/me/`;
 
 
 const userStore = observable(
     {
+        //error and errorlist
         currentUser: null,
         loading: true,
 
