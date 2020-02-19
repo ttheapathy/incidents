@@ -38,8 +38,10 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
     };
 
     const handleCreate = () => {
+        console.log('errs', form.getFieldError('title'));
         form.validateFields((err, values) => {
             if (err) {
+
                 return;
             }
             incidentStore.addIncident(values).then(
@@ -65,10 +67,8 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
 
 
     useEffect(() => {
-        if (qStatus) incidentStore.setFilter('status', qStatus);
-        if (qPriority) incidentStore.setFilter('priority', qPriority);
-        //incidentStore.fetchIncidents();
-        
+        incidentStore.setFilter('status', qStatus);
+        incidentStore.setFilter('priority', qPriority);     
     }, []);
 
     useEffect(() => {

@@ -37,6 +37,9 @@ const incidentStore = observable(
         get errorDescription() {
             return this.errors.description;
         },
+        get errorPriority() {
+            return this.errors.priority;
+        },
 
         async fetchIncidents() {
             try {
