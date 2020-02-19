@@ -5,6 +5,7 @@ import { ProtectedRoute } from './ProtectedRoute';
 import {Login} from './components/Login/Login';
 import {News} from './components/News/News';
 import {Incidents} from './components/Incidents/Incidents';
+import {NoMatch} from './components/NoMatch';
 import { Layout } from 'antd';
 import { inject, observer } from 'mobx-react';
 
@@ -40,11 +41,15 @@ const App = inject('userStore')(observer(({userStore}) => {
                                 <ProtectedRoute exact path={'/incidents'}>
                                     <Incidents/>
                                 </ProtectedRoute>
+                                <Route path="*">
+                                    <NoMatch />
+                                </Route>
                             </Switch>
                         </Content>
                         <Footer style={{ textAlign: 'center' }}>incidents app by ttheapathy</Footer>
                     </Route>
                 </Switch>
+
             </Router>
         </Layout>
     );
