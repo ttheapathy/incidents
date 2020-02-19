@@ -12,21 +12,8 @@ import { IncidentForm } from './IncidentForm';
 
 import './Incidents.scss';
 
-/*
-const queryHanlder = (location, filter, value) => {
-    //const location = useLocation();
-    const query = new URLSearchParams(location.search);
-    query.has(filter) ? query.set(filter, value) : query.append(filter, value);
-    return { ...location, search: query.toString() };
-};
-*/
-
-
-
 export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
 
-    
-    
     const [visible, setVisible] = useState(false);
 
     const [form, setForm] = useState(null);
@@ -55,7 +42,6 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
             if (err) {
                 return;
             }
-            //console.log('Received values of form: ', values);
             incidentStore.addIncident(values).then(
                 (res) => {
                     if (res.status === 201) {
@@ -67,10 +53,6 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
                     }
                 }
             );
-            
-            //form.resetFields();
-            //setVisible(false);
-
         });
     };
 
@@ -78,19 +60,18 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
 
     const query = new URLSearchParams(history.location.search);
 
-
     const qStatus = query.get('status');
     const qPriority = query.get('priority');
 
 
+    useEffect(() => {
+        if (qStatus) incidentStore.setFilter('status', qStatus);
+        if (qPriority) incidentStore.setFilter('priority', qPriority);
+        //incidentStore.fetchIncidents();
+        
+    }, []);
 
     useEffect(() => {
-
-        console.log('qs', qStatus);
-        console.log('qp', qPriority);
-
-        //if (qStatus) incidentStore.setFilter('status', qStatus);
-        //if (qPriority) incidentStore.setFilter('priority', qPriority);
 
         reaction(
             () => incidentStore.filters.status,
@@ -101,12 +82,12 @@ export const Incidents = inject('incidentStore')(observer(({incidentStore}) => {
             () => incidentStore.filters.priority,
             priority => setFilter(history, 'priority', priority)
         );
-
         
         incidentStore.fetchIncidents();
-
-        
+ 
     }, [qStatus, qPriority, incidentStore.limit]);
+
+
     
     return (
         <div className="incidents">
